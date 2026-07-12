@@ -2,7 +2,7 @@ const path = require("path");
 
 module.exports = {
     app: {
-    port: 3000,
+    port: 3001,
     static_folder: path.join(__dirname, "../src/public"),
     router: path.join(__dirname, "../src/routers/web"),
     view_folder: path.join(__dirname, "../src/apps/views"),
