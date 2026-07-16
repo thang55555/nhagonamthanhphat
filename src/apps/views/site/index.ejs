@@ -41,7 +41,96 @@
                 <%-item.gioithieuchung%>
                   <%}%>
 
-            </div> <a style="margin-top: 5px;" href="/gioi-thieu" title="Xem hồ sơ năng lực"
+            </div> 
+
+<div class="stats-wrapper">
+    <div class="stat-item">
+        <h2 class="counter" data-target="40">0</h2>
+        <p>MẪU NHÀ</p>
+    </div>
+    <div class="stat-item">
+        <h2 class="counter" data-target="60">0</h2>
+        <p>KHÁCH HÀNG</p>
+    </div>
+    <div class="stat-item">
+        <h2 class="counter" data-target="180">0</h2>
+        <p>DỰ ÁN HOÀN THÀNH</p>
+    </div>
+</div>
+<style>
+  .stats-wrapper {
+    display: flex;
+    justify-content: space-around;
+    padding: 50px 0;
+    color: white; /* Giả định nền tối như ảnh */
+}
+
+.stat-item {
+    text-align: center;
+    position: relative;
+    padding: 0 20px;
+}
+
+/* Số liệu (40+, 60+, 180+) */
+.stat-item h2 {
+    font-size: 3em;
+    font-weight: bold;
+    margin: 0;
+    font-family: sans-serif;
+}
+
+/* Đường kẻ ngang */
+.stat-item::after {
+    content: "";
+    display: block;
+    width: auto;
+    height: 2px;
+    background-color: #d4a017; /* Màu vàng đồng */
+    margin: 15px auto;
+}
+.counter::after {
+    content: "";
+    display: block;
+    width: auto;
+    height: 1px;
+    background-color: #d4a017; /* Màu vàng đồng */
+    margin: 15px auto;
+}
+
+/* Chữ tiêu đề (MẪU NHÀ, ...) */
+.stat-item p {
+    font-size: 1.1em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+</style>
+<script>
+    function animateCounter() {
+        const counters = document.querySelectorAll('.counter');
+        const speed = 200; // Tốc độ đếm (số càng nhỏ đếm càng nhanh)
+
+        counters.forEach(counter => {
+            const updateCount = () => {
+                const target = +counter.getAttribute('data-target');
+                const count = +counter.innerText;
+                const inc = target / speed;
+
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + inc);
+                    setTimeout(updateCount, 10);
+                } else {
+                    counter.innerText = target + "+"; // Thêm dấu + vào sau
+                }
+            };
+            updateCount();
+        });
+    }
+
+    // Chạy khi trang web tải xong
+    window.addEventListener('DOMContentLoaded', animateCounter);
+</script>
+            <a style="margin-top: 5px;" href="/gioi-thieu" title="Xem hồ sơ năng lực"
               class="button-borders__alls"> VỀ CHÚNG TÔI</a>
           </div>
         </div>
@@ -213,9 +302,7 @@
                       <%= new Intl.DateTimeFormat('en-US').format(tintucOne.createdAt)%>
                     </li>
                   </ul>
-                  <!-- <div class="hopthoai_index_tintuc_content">
-                                        <%-tintucOne.content%>
-                                    </div> -->
+
                 </div>
               </div>
             </div>
