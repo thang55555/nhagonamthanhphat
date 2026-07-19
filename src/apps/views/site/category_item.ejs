@@ -115,7 +115,8 @@
                           <div class="imgs-prds__alls"> <a href="/product/<%=item.slug%>/<%=item._id%>"
                               class="d-block img">
                               <picture>
-                                <img src="https://phongthodep.net/static/site/images/update/<%=item.image[0].images%>" alt="<%=item.image[0].images%>">
+                                <img src="https://phongthodep.net/static/site/images/update/<%=item.image[0].images%>"
+                                                    onerror="this.onerror=null;this.src='https://phongthodep.net/images/<%=item.image[0].images%>';">
                               </picture>
                             </a> </div>
                           <div class="intros-prds__alls">
@@ -200,8 +201,11 @@
                             srcset="./images/update/<%=item.images%>">
                           <source media="(min-width:0px;)" data-srcset="./images/update/<%=item.images%>"
                             srcset="./images/update/<%=item.images%>">
-                          <img loading="lazy" src="https://phongthodep.net/static/site/images/update/<%=item.images%>"
-                            data-src="./images/update/<%=item.images%>" class="img-fluid ls-is-cached lazyloaded">
+                          <img loading="lazy" 
+                           src="https://phongthodep.net/static/site/images/update/<%=item.images%>"
+                                                    onerror="this.onerror=null;this.src='https://phongthodep.net/images/<%=item.images%>';"
+                            data-src="https://phongthodep.net/static/site/images/update/<%=item.images%>"
+                                                    onerror="this.onerror=null;this.src='https://phongthodep.net/images/<%=item.images%>';" class="img-fluid ls-is-cached lazyloaded">
                         </picture>
                       </div>
                       <div class="name-works__customers">

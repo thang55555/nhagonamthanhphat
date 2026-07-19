@@ -58,6 +58,7 @@
                                                         class="d-block img_">
                                                         <picture> <img loading="lazy"
                                                                 src="https://phongthodep.net/static/site/images/update/<%=item.image%>"
+                                                    onerror="this.onerror=null;this.src='https://phongthodep.net/images/<%=item.image%>';"
                                                                 class="img-fluid lazyloaded" alt="<%=item.image%>">
                                                         </picture>
                                                     </a> </div>
@@ -118,6 +119,7 @@
                                     <div class="imgs-prds__alls"> <a href="/product/<%=item.slug%>/<%=item._id%>"
                                             class="d-block img">
                                             <picture><img loading="lazy" src="https://phongthodep.net/static/site/images/update/<%=item.image[0].images%>"
+                                                    onerror="this.onerror=null;this.src='https://phongthodep.net/images/<%=item.image[0].images%>';"
                                                     title="" alt="<%=item.image[0].images%>"
                                                     class="img-fluid ls-is-cached lazyloaded">
                                             </picture>

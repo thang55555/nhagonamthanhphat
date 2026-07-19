@@ -55,6 +55,7 @@
                                      <a href="/product/<%=item.slug%>/<%=item._id%>"
                                         class="d-block img">
                                         <picture><img loading="lazy" src="https://phongthodep.net/static/site/images/update/<%=item.image[0].images%>"
+                                                    onerror="this.onerror=null;this.src='https://phongthodep.net/images/<%=item.image[0].images%>';"
                                                 class="img-fluid ls-is-cached lazyloaded" alt="<%=item.image[0].images%>">
                                         </picture>
                                     </a> </div>

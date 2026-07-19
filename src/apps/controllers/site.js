@@ -578,21 +578,22 @@ const duan = async (req, res) => {
 
       // Tổng số bài viết
       const totalRows = await BaivietdichvuModel.countDocuments({
-        menudichvu_id: { $in: menuIds }
+        menudichvu_id: { $in: menuIds }, nhap: true
       });
 
       const totalPages = Math.ceil(totalRows / limit);
 
       // Lấy bài viết theo trang
       const product = await BaivietdichvuModel.find({
-        menudichvu_id: { $in: menuIds }
+        menudichvu_id: { $in: menuIds }, nhap: true
       })
         .populate("menudichvu_id")
         .sort({ _id: -1 })
         .skip(skip)
         .limit(limit);
-
+      
         const ham1 = true;
+        
 
       res.render("./site/category", {
         category: category[0],
@@ -627,19 +628,20 @@ const duan = async (req, res) => {
       const menu2Ids = menu2.map(item => item._id);
 
       const product = await Product_sanphamModel.find({
-        nhomsp_id: { $in: menu2Ids }
+        nhomsp_id: { $in: menu2Ids }, nhap: true
       })
         .populate("nhomsp_id")
         .sort({ _id: -1 })
         .skip(skip)
         .limit(limit);;
-
       // Tổng số bài viết
-      const totalRows = await Product_sanphamModel.find({
-        nhomsp_id: { $in: menu2Ids }
-      })
+const totalRows = await Product_sanphamModel.countDocuments({
+    nhomsp_id: { $in: menu2Ids },
+    nhap: true
+});
 
-      const totalPages = Math.ceil(totalRows / limit);
+const totalPages = Math.ceil(totalRows / limit);
+
   const ham1 = false;
 
       res.render("./site/category", {
