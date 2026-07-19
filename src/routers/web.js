@@ -168,8 +168,20 @@ router.get("/admin/danh-sach-anh/tieu-de", AuthMiddleware.checkAdmin, ProductCon
 router.get("/admin/danh-sach-anh/content", AuthMiddleware.checkAdmin, ProductController.dsanhconent);
 
 
+router.get("/list", AuthMiddleware.checkAdmin, ProductController.list);
 
 
+router.get("/admin/banner", AuthMiddleware.checkAdmin, ProductController.banner);
+router.get("/admin/add-banner", AuthMiddleware.checkAdmin, ProductController.addbanner);
+router.post("/admin/upload-banner", AuthMiddleware.checkAdmin,
+    UploadMiddleware.single("images"), 
+    ProductController.uploadbanner);
+router.get("/admin/edit-banner/:id", AuthMiddleware.checkAdmin, ProductController.editbanner);
+
+router.post("/admin/update-banner/:id",  AuthMiddleware.checkAdmin,
+    UploadMiddleware.single("images"), 
+    ProductController.updatebanner);
+router.get("/admin/delete-banner/:id", AuthMiddleware.checkAdmin, ProductController.deletebanner);
 
 
 
@@ -192,9 +204,11 @@ router.get("/success", SiteController.success);
 router.get("/thuoc-lo-ban", SiteController.thuocloban);
 router.get("/tu-van", SiteController.tuvan);
 router.get("/search", SiteController.search);
-router.get("/shoppe", SiteController.shoppe);
-router.post("/add-shoppe", UploadMiddleware.single("images"),SiteController.addshoppe);
 router.post("/gui-lien-he", UploadMiddleware.single("images"), SiteController.guilienhe);
+router.get("/view-san-pham/:slug/:id", SiteController.productsp);
+router.get("/view-dich-vu/:slug/:id", SiteController.productdichvu);
+router.get("/view-tin-tuc/:slug/:id", SiteController.productTinTuc);
+router.get("/category", SiteController.duan);
  
 
  

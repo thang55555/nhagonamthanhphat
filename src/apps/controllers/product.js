@@ -18,7 +18,7 @@ const ChiaseModel = require("../models/chiase");
 const VideoModel = require("../models/video");
 const LobanModel = require("../models/loban");
 const ImagesModel = require("../models/images");
-
+const BannerModel = require("../models/banner");
 
 
 
@@ -45,18 +45,18 @@ const upload = (req, res) => {
                     //     let img = "<script>window.parent.CKEDITOR.tools.callFunction('','"+imgl+"','ok');</script>";
                     //    res.status(201).send(img);
 
-                    let fileName = req.files.upload.name;
+                    let fileName = req.files.upload.originalFilename;
                     let url = '/images/' + fileName;
                     let msg = 'Upload successfully';
-                    let funcNum = req.query.CKEditorFuncNum;
                     const add = {
                         images: fileName,
                         note: "01"
                     }
                     new ImagesModel(add).save();
 
+let funcNum=req.query.CKEditorFuncNum;
 
-                    res.status(201).send("<script>window.parent.CKEDITOR.tools.callFunction('" + funcNum + "','" + url + "','" + msg + "');</script>");
+res.send("<script>window.parent.CKEDITOR.tools.callFunction('"+funcNum+"','"+url+"','Upload thành công');</script>");
                 }
             });
         });
@@ -66,6 +66,35 @@ const upload = (req, res) => {
 
 }
 
+const list = async (req, res) => {
+const tieude = await ImagesModel.aggregate([
+    { $match: { note: "02" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    { $sort: { _id: -1 } }
+]);
+
+const content = await ImagesModel.aggregate([
+    { $match: { note: "01" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    { $sort: { _id: -1 } }
+]);
+
+    res.render("./admin/image-browser",{tieudeJson: JSON.stringify(tieude), contentJson: JSON.stringify(content)
+    });
+
+}
 
 
 
@@ -312,7 +341,7 @@ const addnhomsp = async (req, res) => {
             title: body.title,
             metadescription: body.metadescription,
             metakeywords: body.metakeywords,
-            web: body.web,
+            web: body.web
         }
         new Menu_nhom_sanphamModel(add).save();
         res.redirect("/admin/nhom-san-pham");
@@ -339,7 +368,7 @@ const updatenhomsanpham = async (req, res) => {
         title: body.title,
         metadescription: body.metadescription,
         metakeywords: body.metakeywords,
-        web: body.web,
+        web: body.web
     }
     await Menu_nhom_sanphamModel.updateOne({ _id: id }, { $set: update });
     res.redirect("/admin/nhom-san-pham")
@@ -460,8 +489,34 @@ const danhsachsanpham = async (req, res) => {
 const addsanpham = async (req, res) => {
     const danhmuc = await Menu_nhom_sanphamModel.find();
     const dichvu = await Menu_dichvuModel.find();
-    res.render("./admin/danh-sach-san-pham/add-san-pham", { danhmuc, dichvu })
+const tieude = await ImagesModel.aggregate([
+    { $match: { note: "02" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    { $sort: { _id: -1 } },
+]);
+
+const content = await ImagesModel.aggregate([
+    { $match: { note: "01" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    
+    { $sort: { _id: -1 } },
+]);
+
+    res.render("./admin/danh-sach-san-pham/add-san-pham", { danhmuc, dichvu, tieudeJson: JSON.stringify(tieude), contentJson: JSON.stringify(content) })
 }
+
 const addproduct = async (req, res) => {
     const { files, body } = req;
     const products = {
@@ -486,29 +541,38 @@ const addproduct = async (req, res) => {
         nhap: body.nhap == "on",
     };
 
-    if (files) {
-        const uploadimg = [];
-        for (item of files) {
-            uploadimg.push(item.originalname);
+    // 1. Khởi tạo mảng chứa tất cả ảnh (cả upload và album)
+    let allImages = [];
+
+    // 2. Xử lý file upload (nếu có)
+    if (files && files.length > 0) {
+        for (const item of files) {
+            // Rename file từ tmp sang thư mục chính
             fs.renameSync(item.path, path.resolve("src/public/site/images/update", item.originalname));
-            const add = {
+
+            // Lưu vào DB ImagesModel
+            await new ImagesModel({
                 images: item.originalname,
                 note: "02"
-            };
-            new ImagesModel(add).save();
-        }
+            }).save();
 
-        const image = [];
-        for (var i = 0; i < files.length; i++) {
-            img = {
-                stt: i,
-                images: uploadimg[i]
-            }
-            image.push(img)
+            // Thêm tên file vào mảng tổng
+            allImages.push(item.originalname);
         }
-        products["image"] = image;
-
     }
+
+    // 3. Xử lý ảnh từ Album (nếu có)
+    if (body.album_image_ids) {
+        // Chuyển chuỗi "anh1.jpg,anh2.png" thành mảng ["anh1.jpg", "anh2.png"]
+        const albumFiles = body.album_image_ids.split(',');
+        allImages = allImages.concat(albumFiles);
+    }
+
+    // 4. Tạo mảng định dạng {stt, images} để gán vào sản phẩm
+    products["image"] = allImages.map((imgName, index) => ({
+        stt: index,
+        images: imgName
+    }));
     new Product_sanphamModel(products).save();
     res.redirect("/admin/danh-sach-san-pham");
 
@@ -521,7 +585,32 @@ const editsanpham = async (req, res) => {
     const danhmuc = await Menu_nhom_sanphamModel.find();
     const product = await Product_sanphamModel.findById(id);
     const dichvu = await Menu_dichvuModel.find();
-    res.render("./admin/danh-sach-san-pham/edit-san-pham", { danhmuc, product, dichvu, page })
+const tieude = await ImagesModel.aggregate([
+    { $match: { note: "02" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    { $sort: { _id: -1 } },
+]);
+
+const content = await ImagesModel.aggregate([
+    { $match: { note: "01" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    
+    { $sort: { _id: -1 } },
+]);
+
+    res.render("./admin/danh-sach-san-pham/edit-san-pham", { danhmuc, product, dichvu, page, tieudeJson: JSON.stringify(tieude), contentJson: JSON.stringify(content) })
 }
 
 const uploadsanpham = async (req, res) => {
@@ -548,29 +637,42 @@ const uploadsanpham = async (req, res) => {
         content: body.content,
         nhap: body.nhap == "on",
     };
-    if (files) {
-        const uploadimg = [];
-        for (item of files) {
-            uploadimg.push(item.originalname);
-            fs.renameSync(item.path, path.resolve("src/public/site/images/update", item.originalname));
-            const add = {
-                images: item.originalname,
-                note: "02"
-            };
-            new ImagesModel(add).save();
-        }
-        if (files.length > 0) {
-            const image = [];
-            for (var i = 0; i < files.length; i++) {
-                img = {
-                    stt: i,
-                    images: uploadimg[i]
-                }
-                image.push(img)
+
+    // 1. Khởi tạo mảng chứa tất cả ảnh (cả upload và album)
+    if (files && files.length > 0 || body.album_image_ids && body.album_image_ids.length > 0) {
+        let allImages = [];
+
+        // 2. Xử lý file upload (nếu có)
+        if (files && files.length > 0) {
+            for (const item of files) {
+                // Rename file từ tmp sang thư mục chính
+                fs.renameSync(item.path, path.resolve("src/public/site/images/update", item.originalname));
+
+                // Lưu vào DB ImagesModel
+                await new ImagesModel({
+                    images: item.originalname,
+                    note: "02"
+                }).save();
+
+                // Thêm tên file vào mảng tổng
+                allImages.push(item.originalname);
             }
-            products["image"] = image;
         }
+
+        // 3. Xử lý ảnh từ Album (nếu có)
+        if (body.album_image_ids) {
+            // Chuyển chuỗi "anh1.jpg,anh2.png" thành mảng ["anh1.jpg", "anh2.png"]
+            const albumFiles = body.album_image_ids.split(',');
+            allImages = allImages.concat(albumFiles);
+        }
+
+        // 4. Tạo mảng định dạng {stt, images} để gán vào sản phẩm
+        products["image"] = allImages.map((imgName, index) => ({
+            stt: index,
+            images: imgName
+        }));
     }
+
     await Product_sanphamModel.updateOne({ _id: id }, { $set: products });
     res.redirect('/admin/danh-sach-san-pham?page=' + req.query.page);
 }
@@ -622,6 +724,7 @@ const addcategorytintuc = async (req, res) => {
             title: body.title,
             metadescription: body.metadescription,
             metakeywords: body.metakeywords,
+            web: body.web,
         }
         new Menu_tintucModel(addcategory).save();
         res.redirect("/admin/danh-sach-menu-tin-tuc")
@@ -644,6 +747,7 @@ const updatemenutintuc = async (req, res) => {
         title: req.body.title,
         metadescription: req.body.metadescription,
         metakeywords: req.body.metakeywords,
+        web: req.body.web,
     }
     await Menu_tintucModel.updateOne({ _id: id }, { $set: update });
     res.redirect("/admin/danh-sach-menu-tin-tuc")
@@ -891,7 +995,32 @@ const baivietdichvu = async (req, res) => {
 }
 const addbaivietdichvu = async (req, res) => {
     const category = await Menu_dichvuModel.find();
-    res.render("./admin/menu-dich-vu/add-bai-viet-dich-vu", { category })
+    const tieude = await ImagesModel.aggregate([
+    { $match: { note: "02" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    { $sort: { _id: -1 } },
+]);
+
+const content = await ImagesModel.aggregate([
+    { $match: { note: "01" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    
+    { $sort: { _id: -1 } },
+]);
+
+    res.render("./admin/menu-dich-vu/add-bai-viet-dich-vu", { category, tieudeJson: JSON.stringify(tieude), contentJson: JSON.stringify(content) })
 }
 const uploadbaivietdichvu = async (req, res) => {
     const { files, body } = req;
@@ -913,28 +1042,38 @@ const uploadbaivietdichvu = async (req, res) => {
         metakeywords: body.metakeywords,
         nhap: body.nhap === "on"
     }
-    if (files) {
-        const uploadimg = [];
-        for (item of files) {
-            uploadimg.push(item.originalname);
+    // 1. Khởi tạo mảng chứa tất cả ảnh (cả upload và album)
+    let allImages = [];
+
+    // 2. Xử lý file upload (nếu có)
+    if (files && files.length > 0) {
+        for (const item of files) {
+            // Rename file từ tmp sang thư mục chính
             fs.renameSync(item.path, path.resolve("src/public/site/images/update", item.originalname));
-            const add = {
+
+            // Lưu vào DB ImagesModel
+            await new ImagesModel({
                 images: item.originalname,
                 note: "02"
-            };
-            new ImagesModel(add).save();
-        }
+            }).save();
 
-        const image = [];
-        for (var i = 0; i < files.length; i++) {
-            img = {
-                stt: i,
-                images: uploadimg[i]
-            }
-            image.push(img)
+            // Thêm tên file vào mảng tổng
+            allImages.push(item.originalname);
         }
-        product["image"] = image;
     }
+
+    // 3. Xử lý ảnh từ Album (nếu có)
+    if (body.album_image_ids) {
+        // Chuyển chuỗi "anh1.jpg,anh2.png" thành mảng ["anh1.jpg", "anh2.png"]
+        const albumFiles = body.album_image_ids.split(',');
+        allImages = allImages.concat(albumFiles);
+    }
+
+    // 4. Tạo mảng định dạng {stt, images} để gán vào sản phẩm
+    product["image"] = allImages.map((imgName, index) => ({
+        stt: index,
+        images: imgName
+    }));
 
     new BaivietdichvuModel(product).save();
     res.redirect('/admin/bai-viet-dich-vu?page=' + req.query.page);
@@ -945,7 +1084,31 @@ const editbaivietdichvu = async (req, res) => {
     const page = req.query.page;
     const product = await BaivietdichvuModel.findById(id);
     const category = await Menu_dichvuModel.find();
-    res.render("./admin/menu-dich-vu/edit-bai-viet-dich-vu", { product, category, page });
+        const tieude = await ImagesModel.aggregate([
+    { $match: { note: "02" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    { $sort: { _id: -1 } },
+]);
+
+const content = await ImagesModel.aggregate([
+    { $match: { note: "01" } },
+    {
+        $group: {
+            _id: "$images",
+            doc: { $first: "$$ROOT" }
+        }
+    },
+    { $replaceRoot: { newRoot: "$doc" } },
+    
+    { $sort: { _id: -1 } },
+]);
+    res.render("./admin/menu-dich-vu/edit-bai-viet-dich-vu", { product, category, page, tieudeJson: JSON.stringify(tieude), contentJson: JSON.stringify(content) });
 }
 const updatebaivietdichvu = async (req, res) => {
     const id = req.params.id;
@@ -968,27 +1131,39 @@ const updatebaivietdichvu = async (req, res) => {
         metakeywords: body.metakeywords,
         nhap: body.nhap === "on"
     }
-    if (files.length > 0) {
-        const uploadimg = [];
-        for (item of files) {
-            uploadimg.push(item.originalname);
-            fs.renameSync(item.path, path.resolve("src/public/site/images/update", item.originalname));
-            const add = {
-                images: item.originalname,
-                note: "02"
-            };
-            new ImagesModel(add).save();
+    // 1. Khởi tạo mảng chứa tất cả ảnh (cả upload và album)
+    if (files && files.length > 0 || body.album_image_ids && body.album_image_ids.length > 0) {
+        let allImages = [];
+
+        // 2. Xử lý file upload (nếu có)
+        if (files && files.length > 0) {
+            for (const item of files) {
+                // Rename file từ tmp sang thư mục chính
+                fs.renameSync(item.path, path.resolve("src/public/site/images/update", item.originalname));
+
+                // Lưu vào DB ImagesModel
+                await new ImagesModel({
+                    images: item.originalname,
+                    note: "02"
+                }).save();
+
+                // Thêm tên file vào mảng tổng
+                allImages.push(item.originalname);
+            }
         }
 
-        const image = [];
-        for (var i = 0; i < files.length; i++) {
-            img = {
-                stt: i,
-                images: uploadimg[i]
-            }
-            image.push(img)
+        // 3. Xử lý ảnh từ Album (nếu có)
+        if (body.album_image_ids) {
+            // Chuyển chuỗi "anh1.jpg,anh2.png" thành mảng ["anh1.jpg", "anh2.png"]
+            const albumFiles = body.album_image_ids.split(',');
+            allImages = allImages.concat(albumFiles);
         }
-        product["image"] = image;
+
+        // 4. Tạo mảng định dạng {stt, images} để gán vào sản phẩm
+        product["image"] = allImages.map((imgName, index) => ({
+            stt: index,
+            images: imgName
+        }));
     }
     await BaivietdichvuModel.updateOne({ _id: id }, { $set: product });
     res.redirect('/admin/bai-viet-dich-vu?page=' + req.query.page);
@@ -1206,22 +1381,162 @@ const updatethuocloban = async (req, res) => {
     res.redirect("/admin/thuoc-lo-ban")
 }
 //danh sách ảnh
+const removeDuplicateImages = async () => {
+    const duplicates = await ImagesModel.aggregate([
+        {
+            $group: {
+                _id: {
+                    note: "$note",
+                    images: "$images"
+                },
+                ids: { $push: "$_id" },
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $match: {
+                count: { $gt: 1 }
+            }
+        }
+    ]);
 
+    for (const item of duplicates) {
+        // Giữ lại document đầu tiên
+        const idsToDelete = item.ids.slice(1);
+
+        if (idsToDelete.length > 0) {
+            await ImagesModel.deleteMany({
+                _id: { $in: idsToDelete }
+            });
+        }
+    }
+};
 
 const dsanh = async (req, res) => {
-    const tieude = await ImagesModel.find({ note: '02' });
-    const content = await ImagesModel.find({ note: '01' });
-    res.render("./admin/danh-sach-anh/menu-danh-sach", { tieude, content })
-}
+
+    // Xóa document trùng
+    await removeDuplicateImages();
+
+    const tieude = await ImagesModel.find({ note: "02" });
+
+    const content = await ImagesModel.find({ note: "01" });
+
+    res.render("./admin/danh-sach-anh/menu-danh-sach", {
+        tieude,
+        content
+    });
+};
 
 const dsanhtieude = async (req, res) => {
-    const image = await ImagesModel.find({ note: '02' }).sort({ _id: -1 });
-    res.render("./admin/danh-sach-anh/danh-sach-anh-tieu-de", { image })
-}
+    const page = parseInt(req.query.page) || 1;
+    const limit = 30;
+    const skip = (page - 1) * limit;
+
+    // Đếm tổng số document
+    const total = await ImagesModel.countDocuments({ note: "02" });
+
+    const totalPages = Math.ceil(total / limit);
+
+    // Lấy dữ liệu theo trang
+    const image = await ImagesModel.find({ note: "02" })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit);
+
+    res.render("./admin/danh-sach-anh/danh-sach-anh-tieu-de", {
+        image,
+        page,
+        totalPages
+    });
+};
 const dsanhconent = async (req, res) => {
-    const image = await ImagesModel.find({ note: '01' }).sort({ _id: -1 });
-    res.render("./admin/danh-sach-anh/danh-sach-anh-content", { image })
+    const page = parseInt(req.query.page) || 1;
+    const limit = 30;
+    const skip = (page - 1) * limit;
+
+    // Đếm tổng số document
+    const total = await ImagesModel.countDocuments({ note: "01" });
+
+    const totalPages = Math.ceil(total / limit);
+
+    // Lấy dữ liệu theo trang
+    const image = await ImagesModel.find({ note: "01" })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit);
+
+    res.render("./admin/danh-sach-anh/danh-sach-anh-content", {
+        image,
+        page,
+        totalPages
+    });
+};
+
+
+const banner = async (req, res) => {
+    const product = await BannerModel.find().sort({ _id: -1 });
+    const stt = 1;
+    res.render("./admin/banner/danh-sach-banner", { product, stt })
 }
+const addbanner = async (req, res) => {
+    res.render("./admin/banner/add-banner")
+}
+const uploadbanner = async (req, res) => {
+    const { file, body } = req;
+    const product = {
+        name: body.name,
+        content: body.content,
+        title: body.title,
+        metadescription: body.metadescription,
+        metakeywords: body.metakeywords,
+        content: body.content,
+    }
+    if (file) {
+        fs.renameSync(file.path, path.resolve("src/public/site/images/update", file.originalname));
+        product["images"] = file.originalname;
+        const add = {
+            images: file.originalname,
+            note: "02"
+        };
+        new ImagesModel(add).save();
+    }
+    new BannerModel(product).save();
+    res.redirect("/admin/banner");
+}
+const editbanner = async (req, res) => {
+    const id = req.params.id;
+    const product = await BannerModel.findById(id);
+    res.render("./admin/banner/edit-banner", { product })
+}
+const updatebanner = async (req, res) => {
+    const id = req.params.id;
+    const { file, body } = req;
+    const product = {
+        name: body.name,
+        content: body.content,
+        title: body.title,
+        metadescription: body.metadescription,
+        metakeywords: body.metakeywords,
+        content: body.content,
+    }
+    if (file) {
+        fs.renameSync(file.path, path.resolve("src/public/site/images/update", file.originalname));
+        product["images"] = file.originalname;
+        const add = {
+            images: file.originalname,
+            note: "02"
+        };
+        new ImagesModel(add).save();
+    }
+    await BannerModel.updateOne({ _id: id }, { $set: product });
+    res.redirect("/admin/banner");
+}
+const deletebanner = async (req, res) => {
+    const id = req.params.id;
+    await BannerModel.deleteOne({ _id: id });
+    res.redirect("/admin/banner")
+}
+
 
 
 module.exports = {
@@ -1238,5 +1553,6 @@ module.exports = {
     deletebaivietdichvu, yeucautuvan, edityeucautuvan, chiasekhachhang, addchiasekhachhang, uploadchiasekhachhang,
     editchiasekhachhang, updatechiasekhachhang, deletechiasekhachhang, video, addvideo, uploadvideo, editvideo,
     updatevideo, deletevideo, search, uploadsanpham2, updatebaiviettintuc2, updatebaivietdichvu2,
-    thuocloban, editthuocloban, updatethuocloban, dsanh, dsanhtieude, dsanhconent,
+    thuocloban, editthuocloban, updatethuocloban, dsanh, dsanhtieude, dsanhconent, list,
+    banner, addbanner, uploadbanner, editbanner, updatebanner, deletebanner
 }

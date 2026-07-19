@@ -45,16 +45,16 @@
 
 <div class="stats-wrapper">
     <div class="stat-item">
-        <h2 class="counter" data-target="40">0</h2>
-        <p>MẪU NHÀ</p>
+        <h2 class="counter" data-target="150">0</h2>
+        <p>MẪU NHÀ GỖ</p>
     </div>
     <div class="stat-item">
-        <h2 class="counter" data-target="60">0</h2>
-        <p>KHÁCH HÀNG</p>
+        <h2 class="counter" data-target="200">0</h2>
+        <p>DỰ ÁN THIẾT KẾ/NĂM</p>
     </div>
     <div class="stat-item">
-        <h2 class="counter" data-target="180">0</h2>
-        <p>DỰ ÁN HOÀN THÀNH</p>
+        <h2 class="counter" data-target="15">0</h2>
+        <p>DỰ ÁN THI CÔNG/NĂM</p>
     </div>
 </div>
 <style>
@@ -146,13 +146,20 @@
     <div class="container">
       <div class="" style="margin-top: 30px; text-align: -webkit-center; ">
         <div class="row row-collapse row-full-width gallery-row gallery-row-center">
-          <%for(item of menudichvu){%>
+          <%for(item of banner){%>
             <div style="padding: 0;" class="col-12 medium-12 small-12 large-6" data-animate="fadeInLeft"
               data-animated="true">
               <div class="col-inner">
                 <div class="box has-hover box-zoom  has-hover box-overlay index_img dark box-text-bottom">
                   <div class="box-image">
-                    <a href="/category-dich-vu/<%=item.slug%>/<%=item._id%>">
+                    <a href="/category?item=<%= item.name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+%>">
                       <div class="image-overlay-remove image-cover img_index_banner"
                         style="padding-top:538px; margin-bottom: 15px;">
                         <img decoding="async" src="https://phongthodep.net/static/site/images/update/<%=item.images%>"
@@ -165,10 +172,24 @@
 
                   <div class="box-text text-center">
                     <div class="box-text-inner">
-                      <h3><a href="/category-dich-vu/<%=item.slug%>/<%=item._id%>">
-                          <%=item.menudichvu%>
+                      <h3><a href="/category?item=<%= item.name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+%>">
+                          <%=item.name%>
                         </a></h3>
-                      <a href="/category-dich-vu/<%=item.slug%>/<%=item._id%>" target="_self"
+                      <a href="/category?item=<%= item.name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+%>" target="_self"
                         class="button white is-link">
                         <span>XEM THÊM</span>
                       </a>

@@ -40,6 +40,7 @@
 									<th>Meta description</th>
 									<th>Meta keywords</th>
 									<th>Ngày đăng</th>
+									<th>View bài viết</th>
 									<th>Hành động</th> 
 								</tr>
 							</thead>
@@ -48,7 +49,13 @@
 								<tr>
 									<td><%=stt++%></td>
 									<td><div class="antext"><%=item.tieudesp%></div></td>
-									<td><div class="antext"><%=item.menudichvu_id.menudichvu%></div></td>
+<td>
+    <div class="antext">
+        <% item.menudichvu_id.forEach(function(menu){ %>
+            <div><%= menu.menudichvu %></div>
+        <% }) %>
+    </div>
+</td>
 									<td>  
 										<div class="form-check form-switch">
 										<input onclick="clickupdate('<%=item._id%>')"  <%= item.nhap==1 && "checked" %> class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" name="nhap" value="on">
@@ -57,11 +64,12 @@
 									<td><div class="antext"><%=item.metadescription%> </div></td>
 									<td><div class="antext"><%=item.metakeywords%></div> </td>
 									<td><%= new Intl.DateTimeFormat('en-US').format(item.createdAt)%></td>
+									<td><a href="/view-dich-vu/<%=item.slug%>/<%=item._id%>" target="_blank">
+										<i class="fa-solid fa-eye"></i> </a>
+									</td>
 									<td class="form-group">
-										<a href="/admin/edit-bai-viet-dich-vu/<%=item._id%>?page=<%=page%>" class="btn btn-primary"><i
-												class="glyphicon glyphicon-pencil"></i></a>
-										<a onclick="clickDelete('<%=item._id%>')" class="btn btn-danger"><i
-												class="glyphicon glyphicon-remove"></i></a>
+										<a href="/admin/edit-bai-viet-dich-vu/<%=item._id%>?page=<%=page%>" ><i class="fa-solid fa-pen-to-square"></i></a>
+										<a onclick="clickDelete('<%=item._id%>')" ><i class="fa-solid fa-trash" style="color: rgb(48, 165, 255);"></i></a>
 									</td>
 								</tr>
 								<%}%>

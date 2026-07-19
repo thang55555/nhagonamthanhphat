@@ -2,6 +2,7 @@
 const ejs = require("ejs");
 const path = require("path");
 const transporter = require("../../common/transporter");
+const slug = require("slug");
 const Gioi_thieu_trangModel = require("../models/gioi_thieu_trang");
 const VideoModel = require("../models/video");
 const BaiviettintucModel = require("../models/baiviet_tintuc");
@@ -18,6 +19,7 @@ const TuvanModel = require("../models/tuvan");
 const Thong_tin_trangModel = require("../models/thong_tin_trang");
 const LobanModel = require("../models/loban");
 const mongoose = require('mongoose');
+const BannerModel = require("../models/banner");
 
 // Helper: validate ObjectId or treat as slug
 const findByIdOrSlug = async (Model, idOrSlug, slugField = "slug") => {
@@ -38,10 +40,11 @@ const home = async (req, res) => {
     const tintuc = await BaiviettintucModel.find({ nhap: true }).sort({ _id: -1 }) || [];
     const tintucOne = tintuc.length > 0 ? await BaiviettintucModel.findById(tintuc[0]._id) : null;
 
-    const menudichvu = await Menu_dichvuModel.find({ nhap: true }).limit(2);
+    const banner = await BannerModel.find({ nhap: true }).limit(2);
     const chiase = await ChiaseModel.find();
 
-    res.render("site/index", { gioithieutrang, video, videoOne, tintuc, tintucOne, menudichvu, chiase });
+
+    res.render("site/index", { gioithieutrang, video, videoOne, tintuc, tintucOne, banner, chiase });
   } catch (err) {
     console.error("❌ Lỗi tại home:", err);
     res.status(500).send("Có lỗi xảy ra");
@@ -413,15 +416,15 @@ const productsp = async (req, res) => {
     if (!product) return res.status(404).send("Không tìm thấy sản phẩm");
 
     let category_danhmuc = null;
-   if (
-    product.nhomsp_id &&
-    product.nhomsp_id.length > 0 &&
-    product.nhomsp_id[0].danhmuc_id
-) {
-    category_danhmuc = await Menu_danhmuc_sanphamModel.findById(
+    if (
+      product.nhomsp_id &&
+      product.nhomsp_id.length > 0 &&
+      product.nhomsp_id[0].danhmuc_id
+    ) {
+      category_danhmuc = await Menu_danhmuc_sanphamModel.findById(
         product.nhomsp_id[0].danhmuc_id
-    );
-}
+      );
+    }
 
     const product_noibat = await Product_sanphamModel.find({ nhap: true }).limit(5).sort({ _id: -1 });
     res.render("./site/product", { product, category_danhmuc, product_noibat });
@@ -497,276 +500,174 @@ const search = async (req, res) => {
   }
 };
 
-const shoppe = async (req, res) => {
+// const duan = async (req, res) => {
+//     try {
 
+//         const keyword = req.query.item;
 
-  res.render("./site/shoppe", {
+//         const page = parseInt(req.query.page) || 1;
+//         const limit = 12;
+//         const skip = (page - 1) * limit;
 
-  });
-};
-const axios = require("axios");
+//         const category = await BannerModel.find({
+//             slug: keyword
+//         });
 
-const addshoppe = async (req, res) => {
-    try {
+//         const menus = await Menu_dichvuModel.find({
+//             web: "Nhagonamthanhphat.com"
+//         });
 
-        let link = req.body.link?.trim();
+//         const menuIds = menus.map(menu => menu._id);
 
-        if (!link) {
-            return res.send("Thiếu link");
-        }
+//         // Tổng số bài viết
+//         const totalRows = await BaivietdichvuModel.countDocuments({
+//             menudichvu_id: { $in: menuIds }
+//         });
 
-        // ✅ kiểm tra domain Shopee
-        const allowDomains = [
-            "shopee.vn",
-            "s.shopee.vn",
-            "vn.shp.ee"
-        ];
+//         const totalPages = Math.ceil(totalRows / limit);
 
-        let hostname = "";
+//         // Lấy bài viết theo trang
+//         const product = await BaivietdichvuModel.find({
+//             menudichvu_id: { $in: menuIds }
+//         })
+//         .populate("menudichvu_id")
+//         .sort({ _id: -1 })
+//         .skip(skip)
+//         .limit(limit);
 
-        try {
-            hostname = new URL(link).hostname;
-        } catch (e) {
-            return res.send("Link không hợp lệ");
-        }
+//         res.render("./site/category", {
+//             category,
+//             product,
+//             keyword,
 
-        if (!allowDomains.includes(hostname)) {
-            return res.send("Chỉ hỗ trợ link Shopee");
-        }
+//             page,
+//             totalPages,
 
-        // =====================================================
-        // ✅ RESOLVE LINK vn.shp.ee -> link thật
-        // =====================================================
+//             next: page + 1,
+//             hasNext: page < totalPages,
 
-        if (hostname === "vn.shp.ee") {
+//             prev: page - 1,
+//             hasPrev: page > 1,
 
-            try {
+//             pages: pagination(page, totalPages)
+//         });
 
-                const response = await axios.get(link, {
-                    maxRedirects: 0,
-                    validateStatus: (status) => {
-                        return status >= 300 && status < 400;
-                    }
-                });
+//     } catch (err) {
+//         console.log(err);
+//         res.status(500).send("Có lỗi xảy ra");
+//     }
+// };
 
-                const realLink = response.headers.location;
+const duan = async (req, res) => {
+  try {
 
-                if (realLink) {
-                    link = realLink;
-                }
+    const keyword = req.query.item;
 
-            } catch (e) {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 12;
+    const skip = (page - 1) * limit;
 
-                if (e.response?.headers?.location) {
-                    link = e.response.headers.location;
-                }
+    const category = await BannerModel.find();
 
-            }
+    if (keyword === slug(category[0].name)) {
+      const menus = await Menu_dichvuModel.find({
+        web: "Nhagonamthanhphat.com"
+      });
 
-        }
+      const menuIds = menus.map(menu => menu._id);
 
-        // =====================================================
-        // ✅ encode link
-        // =====================================================
+      // Tổng số bài viết
+      const totalRows = await BaivietdichvuModel.countDocuments({
+        menudichvu_id: { $in: menuIds }
+      });
 
-        const encodedLink = encodeURIComponent(link);
+      const totalPages = Math.ceil(totalRows / limit);
 
-        // =====================================================
-        // ✅ tạo affiliate link
-        // =====================================================
+      // Lấy bài viết theo trang
+      const product = await BaivietdichvuModel.find({
+        menudichvu_id: { $in: menuIds }
+      })
+        .populate("menudichvu_id")
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit);
 
-        const finalUrl =
-            `https://s.shopee.vn/an_redir?origin_link=${encodedLink}` +
-            `&affiliate_id=17399990070` +
-            `&sub_id=shoppe-usre1-aff1-aff2-aff3`;
+        const ham1 = true;
 
-        // =====================================================
-        // ✅ rút gọn link
-        // =====================================================
+      res.render("./site/category", {
+        category: category[0],
+        product,
+        keyword, ham1,
 
-        let shortUrl = finalUrl;
+        page,
+        totalPages,
 
-        try {
+        next: page + 1,
+        hasNext: page < totalPages,
 
-            const r = await axios.get(
-                `https://tinyurl.com/api-create.php?url=${encodeURIComponent(finalUrl)}`
-            );
+        prev: page - 1,
+        hasPrev: page > 1,
 
-            shortUrl = r.data;
-
-        } catch (e) {
-
-            console.log("Không rút gọn được link");
-
-        }
-
-        // =====================================================
-        // ✅ VIEW
-        // =====================================================
-console.log(finalUrl);
-
-        res.send(`
-        <html>
-        <head>
-            <title>Chuyển tới Shopee</title>
-
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-
-            <style>
-
-                *{
-                    margin:0;
-                    padding:0;
-                    box-sizing:border-box;
-                }
-
-                body{
-                    font-family:Arial;
-                    background:#f5f6fa;
-                    padding:40px 20px;
-                }
-
-                .box{
-                    background:white;
-                    max-width:420px;
-                    margin:auto;
-                    padding:25px;
-                    border-radius:12px;
-                    box-shadow:0 5px 20px rgba(0,0,0,0.1);
-                }
-
-                h2{
-                    margin-bottom:15px;
-                    color:#222;
-                }
-
-                p{
-                    margin-bottom:15px;
-                    color:#555;
-                }
-
-                .link{
-                    background:#f7f7f7;
-                    padding:12px;
-                    border-radius:8px;
-                    word-break:break-all;
-                    font-size:13px;
-                    color:#333;
-                    margin-bottom:15px;
-                    border:1px solid #eee;
-                }
-
-                .btn{
-                    width:100%;
-                    border:none;
-                    padding:13px;
-                    border-radius:8px;
-                    cursor:pointer;
-                    font-size:15px;
-                    margin-top:10px;
-                    transition:0.2s;
-                }
-
-                .btn:hover{
-                    opacity:0.9;
-                }
-
-                .copy{
-                    background:#007bff;
-                    color:white;
-                }
-
-                .ok{
-                    background:#28a745;
-                    color:white;
-                }
-
-                .cancel{
-                    background:#dc3545;
-                    color:white;
-                }
-
-                a{
-                    text-decoration:none;
-                }
-
-                .success{
-                    background:#e9f9ee;
-                    color:#28a745;
-                    padding:10px;
-                    border-radius:8px;
-                    margin-bottom:15px;
-                    font-size:14px;
-                }
-
-            </style>
-        </head>
-
-        <body>
-
-            <div class="box">
-
-                <div class="success">
-                    ✅ Tạo link affiliate thành công
-                </div>
-
-                <h2>🛒 Đi tới Shopee</h2>
-
-                <p>Bạn có thể chia sẻ link này cho bạn bè:</p>
-
-                <div class="link" id="link">${shortUrl}</div>
-
-                <button class="btn copy" onclick="copyLink()">
-                    📋 Copy link
-                </button>
-
-                <a href="${finalUrl}" target="_blank">
-                    <button class="btn ok">
-                        👉 Đi tới Shopee
-                    </button>
-                </a>
-
-                <button class="btn cancel" onclick="window.history.back()">
-                    Quay lại
-                </button>
-
-            </div>
-
-            <script>
-
-                async function copyLink() {
-
-                    const text =
-                        document.getElementById('link').innerText;
-
-                    try {
-
-                        await navigator.clipboard.writeText(text);
-
-                        alert('Đã copy link!');
-
-                    } catch (e) {
-
-                        alert('Copy thất bại');
-
-                    }
-
-                }
-
-            </script>
-
-        </body>
-        </html>
-        `);
-
-    } catch (err) {
-
-        console.log(err);
-
-        res.send("Có lỗi xảy ra");
-
+        pages: pagination(page, totalPages)
+      });
     }
+
+    else if (keyword === slug(category[1].name)) {
+      const menu1 = await Menu_danhmuc_sanphamModel.find({
+        web: "Nhagonamthanhphat.com"
+      });
+
+      const menu1Ids = menu1.map(item => item._id);
+
+      const menu2 = await Menu_nhom_sanphamModel.find({
+        web: "Nhagonamthanhphat.com",
+        danhmuc_id: { $in: menu1Ids }
+      });
+
+      const menu2Ids = menu2.map(item => item._id);
+
+      const product = await Product_sanphamModel.find({
+        nhomsp_id: { $in: menu2Ids }
+      })
+        .populate("nhomsp_id")
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit);;
+
+      // Tổng số bài viết
+      const totalRows = await Product_sanphamModel.find({
+        nhomsp_id: { $in: menu2Ids }
+      })
+
+      const totalPages = Math.ceil(totalRows / limit);
+  const ham1 = false;
+
+      res.render("./site/category", {
+        category: category[1],
+        product,
+        keyword, ham1,
+
+        page,
+        totalPages,
+
+        next: page + 1,
+        hasNext: page < totalPages,
+
+        prev: page - 1,
+        hasPrev: page > 1,
+
+        pages: pagination(page, totalPages)
+      });
+    }
+
+
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Có lỗi xảy ra");
+  }
 };
+
 
 module.exports = {
   home,
@@ -785,5 +686,5 @@ module.exports = {
   tuvan,
   productvideo,
   guilienhe,
-  search, shoppe, addshoppe
+  search, duan
 };

@@ -1,6 +1,10 @@
-<%- include("../layout/head", {title: "Admin thêm mới menu tin tức"})%>
+
+<%- include("../layout/head", {title: "Admin thêm mới chia sẻ khách hàng"})%>
 <%- include("../layout/header")%>
 <%- include("../layout/siderbar")%>
+
+
+
 
     <div class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">
         <div class="row">
@@ -8,44 +12,32 @@
                 <li><a href="/admin/dashboard"><svg class="glyph stroked home">
                             <use xlink:href="#stroked-home"></use>
                         </svg></a></li>
-                <li><a href="/admin/danh-sach-menu-tin-tuc">Menu tin tức</a></li>
-                <li>Thêm menu tin tức</li>
+                <li><a href="/admin/banner">Danh sách banner</a></li>
+                <li>Thêm mới chia sẻ</li>
             </ol>
         </div><!--/.row-->
  
         <div class="row">
             <div class="col-lg-12">
-                <h1 class="page-header">Thêm menu tin tức</h1>
+                <h2 class="page-header">Thêm mới banner</h2>
             </div>
         </div><!--/.row-->
         <div class="row">
             <div class="col-lg-12">
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <div class="col-md-8">
-                            <div class="<%=data.error? "alert alert-danger" : ""%>" ><%=data.error%></div>
-                            <form  name="frm"  role="form" method="post" action="/admin/add-category-tin-tuc">
+                        <div class="col-md-6">
+                            <form role="form" method="post" enctype="multipart/form-data" action="/admin/upload-banner">
                                 <div class="form-group">
-                                    <label>Tên menu tin tức:</label>
-                                    <input required type="text" name="menutintuc" class="form-control"
-                                        placeholder="Tên danh mục...">
-                                </div>
-                                <div class="form-group">
-                                            <div class="form-group">
-                                                <label>Chọn nơi hiển thị (giữ phím Ctrl để chọn nhiều):</label>
-                                                <select required name="web" class="form-control" multiple>
-                                                    <option value="Phongthodep.net">Phongthodep.net</option>
-                                                    <option value="Nhagonamthanhphat.com">Nhagonamthanhphat.com</option>
-                                                </select>
-                                            </div>
+                                    <label>Tên banner</label>
+                                    <input required name="name" type="text" class="form-control" placeholder="Tên khách hàng...">
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Link video</label>
-                                    <input required type="text" name="linkvideo" class="form-control"
-                                        placeholder="Link video...">
+                                    <label>Ảnh banner</label>
+                                    <input name="images" type="file" required>
+                                    <br>
                                 </div>
-
                                         <!-- 3 thẻ sale -->
 <div class="form-group">
     <label>Thẻ title <span id="label_title"></span></label>
@@ -78,15 +70,33 @@
         <div id="bar_keywords" class="progress-bar"></div>
     </div>
 </div>
+                                        <div class="form-group">
+                                            <label>Mô tả banner</label>
+                                            <textarea id="content" required name="content" class="form-control" value=""
+                                                rows="3"></textarea>
+                                            <script>
+                                                CKEDITOR.replace('content', {
+                                                    extraPlugins: 'filebrowser',
+                                                    filebrowserBrowseUrl: '/list',//upload location
+                                                    filebrowserUploadMethod: 'form',
+                                                    filebrowserUploadUrl: '/upload'//route
+                                                })
+                                            </script>
+                                        </div>
 
-                                <button type="submit" name="sbm" class="btn btn-success">Thêm mới</button>
-                                <button type="reset" class="btn btn-default">Làm mới</button>
+                            <button name="sbm" type="submit" class="btn btn-success">Thêm mới</button>
+                            <button type="reset" class="btn btn-default">Làm mới</button>
                         </div>
+
+                        <div class="col-md-6">
+                        </div>
+                        
                         </form>
                     </div>
                 </div>
-            </div>
-        </div><!-- /.col-->
+            </div><!-- /.col-->
+        </div><!-- /.row -->
+
     </div> <!--/.main-->
 
     <script src="js/jquery-1.11.1.min.js"></script>
