@@ -32,7 +32,7 @@ const findByIdOrSlug = async (Model, idOrSlug, slugField = "slug") => {
 // HOME
 const home = async (req, res) => {
   try {
-    const gioithieutrang = await Gioi_thieu_trangModel.find();
+    const gioithieutrang = await Gioi_thieu_trangModel.find({ web: "Nhagonamthanhphat.com" });
     const video = await VideoModel.find().sort({ _id: -1 }) || [];
 
     const videoOne = video.length > 0 ? await VideoModel.findById(video[0]._id) : null;
@@ -387,7 +387,7 @@ const productvideo = async (req, res) => {
 const gioithieu = async (req, res) => {
   try {
     const chiase = await ChiaseModel.find();
-    const product = await Gioi_thieu_trangModel.find();
+    const product = await Gioi_thieu_trangModel.find({ web: "Nhagonamthanhphat.com" });
     res.render("./site/gioithieu", { product, chiase });
   } catch (err) {
     console.error("❌ Lỗi tại gioithieu:", err);
@@ -398,7 +398,7 @@ const gioithieu = async (req, res) => {
 // LIEN HE
 const lienhe = async (req, res) => {
   try {
-    const thongtin = await Thong_tin_trangModel.find();
+    const thongtin = await Thong_tin_trangModel.find({ web: "Nhagonamthanhphat.com" });
     res.render("./site/lienhe", { thongtin });
   } catch (err) {
     console.error("❌ Lỗi tại lienhe:", err);

@@ -7,7 +7,7 @@ module.exports = async (req, res, next)=>{
     res.locals.menudv = await Menu_dichvuModel.find({ web: "Nhagonamthanhphat.com" });
     res.locals.menutt = await Menu_tintucModel.find({ web: "Nhagonamthanhphat.com" });
     
-    res.locals.thongtintrang = await Thong_tin_trangModel.find();
+    res.locals.thongtintrang = await Thong_tin_trangModel.find({ web: "Nhagonamthanhphat.com" });
     const menu = await Menu_danhmuc_sanphamModel.find({ web: "Nhagonamthanhphat.com" });
     const MENU=[];
     for(item of menu){

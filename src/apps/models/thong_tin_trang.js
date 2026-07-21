@@ -55,5 +55,5 @@ const thong_tin_trangSchema = new mongoose.Schema({
  
     
 }, {timestamps:true});
-const Thong_tin_trangModel = mongoose.model("Thong_tin_trang2", thong_tin_trangSchema, "thong_tin_trang2");
+const Thong_tin_trangModel = mongoose.model("Thong_tin_trang", thong_tin_trangSchema, "thong_tin_trang");
 module.exports = Thong_tin_trangModel;

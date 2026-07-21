@@ -28,5 +28,5 @@ const gioi_thieu_trangSchema = new mongoose.Schema({
     timestamps: true,
 });
 
-const Gioi_thieu_trangModel = mongoose.model("Gioi_thieu_trang2", gioi_thieu_trangSchema, "gioi_thieu_trang2");
+const Gioi_thieu_trangModel = mongoose.model("Gioi_thieu_trang", gioi_thieu_trangSchema, "gioi_thieu_trang");
 module.exports = Gioi_thieu_trangModel;
