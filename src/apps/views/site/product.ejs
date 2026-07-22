@@ -24,11 +24,6 @@
                         </span></a>
                     <meta content="2">
                 </li>
-                <li><a href="/category-item/<%=product.nhomsp_id.slug%>/<%=product.nhomsp_id%>"><span>
-                            <%=product.nhomsp_id.tennhomsanpham%>
-                        </span></a>
-                    <meta content="2">
-                </li>
                 <li><a><span style="color: #F5D182;">
                             <%=product.tieudesp%>
                         </span></a>
@@ -56,19 +51,21 @@
                                                     </li>
                                                     <% } %>
                                         </ol>
-                                        <div class="carousel-inner">
-
-                                            <% if (product.image && product.image.length) { %>
-                                                <% for(let i=0; i < product.image.length; i++) { %>
-                                                    <div class="carousel-item <%= i === 0 ? 'active' : '' %>">
-                                                        <img class="d-block w-100"
-                                                            src="https://phongthodep.net/static/site/images/update/<%= product.image[i].images %>"
-                                                            onerror="this.onerror=null;this.src='https://phongthodep.net/images/<%= product.image[i].images %>';">
-                                                    </div>
-                                                    <% } %>
-                                                        <% } %>
-
-                                        </div>
+<div class="carousel-inner">
+    <% if (product.image && product.image.length) { %>
+        <% for(let i=0; i < product.image.length; i++) { %>
+            <div class="carousel-item <%= i === 0 ? 'active' : '' %>">
+                <!-- Thêm thẻ a bọc ngoài ảnh để tạo hiệu ứng phóng to -->
+                <a href="https://phongthodep.net/static/site/images/update/<%= product.image[i].images %>" class="glightbox">
+                    <img class="d-block w-100"
+                        src="https://phongthodep.net/static/site/images/update/<%= product.image[i].images %>"
+                        onerror="this.onerror=null; this.src='https://phongthodep.net/images/<%= product.image[i].images %>'; this.closest('a').href='https://phongthodep.net/images/<%= product.image[i].images %>';"
+                        style="cursor: pointer;">
+                </a>
+            </div>
+        <% } %>
+    <% } %>
+</div>
                                         <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button"
                                             data-slide="prev">
                                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>

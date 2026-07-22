@@ -135,7 +135,7 @@ const categoryitem = async (req, res) => {
     const chiase = await ChiaseModel.find();
 
     res.render("./site/category_item", {
-      category, product, image, imageOne, total,
+      category, product, image,
       page,
       totalPages,
       next: page + 1,
