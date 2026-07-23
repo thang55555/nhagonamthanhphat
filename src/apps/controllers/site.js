@@ -64,7 +64,7 @@ const categoryDanhmuc = async (req, res) => {
     const menudanhmuc = await Menu_danhmuc_sanphamModel.findById(id);
     if (!menudanhmuc) return res.status(404).send("Không tìm thấy danh mục");
 
-    const nhomsp = await Menu_nhom_sanphamModel.find({ danhmuc_id: id });
+    const nhomsp = await Menu_nhom_sanphamModel.find({ danhmuc_id: id, web: "Nhagonamthanhphat.com" });
 
     // Lấy danh sách nhomsp ids
     const nhomIds = nhomsp.map(n => n._id);
@@ -159,7 +159,7 @@ const categorydichvu = async (req, res) => {
     const slug = req.params.slug;
 
     const category = await Menu_dichvuModel.findById(id);
-    const categorynhom = await Menu_dichvuModel.find();
+    const categorynhom = await Menu_dichvuModel.find({web: "Nhagonamthanhphat.com"});
 
     // bảo vệ nếu category không tồn tại
     if (!category) return res.status(404).send("Không tìm thấy danh mục dịch vụ");
@@ -297,7 +297,7 @@ const categoryitintuc = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    const menuproduct = await Menu_danhmuc_sanphamModel.find();
+    const menuproduct = await Menu_danhmuc_sanphamModel.find({web: "Nhagonamthanhphat.com"});
 
     res.render("./site/category_tintuc", {
       product,
